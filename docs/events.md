@@ -4,7 +4,7 @@
 
 Each event is structured into two parts:
 
-- Attributes: metadata providing contextual information about the event and present in 
+- Attributes: metadata providing contextual information about the event and present in
 all types of events. The attributes are based on the CloudEvents specification.
 - Data: other information specific to the event.
 
@@ -64,6 +64,7 @@ Git events are related to commits in git repositories.
 
 | Field         | Type            | Description                                                |
 |---------------|-----------------|------------------------------------------------------------|
+| commit        | `String`        | Commit hash                                                |
 | filename      | `String`        | Name of the file                                           |
 | modes         | `List (String)` | Git file modes                                             |
 | indexes       | `List (String)` | Git indexes                                                |
@@ -100,7 +101,6 @@ Git events are related to commits in git repositories.
 
 File objects found in the `files` field of [commit](#commit) and [merge commit](#merge-commit) events.
 
-
 | Field   | Type            | Description                         |
 |---------|-----------------|-------------------------------------|
 | action  | `String`        | Identifier of the action performed  |
@@ -110,13 +110,13 @@ File objects found in the `files` field of [commit](#commit) and [merge commit](
 | modes   | `List (String)` | Git file modes                      |
 | removed | `String`        | Number of deleted lines in the file |
 
-
 #### Commit contributors
 
 Information about contributors related to a commit.
 
 | Field    | Type     | Description                                       |
 |----------|----------|---------------------------------------------------|
+| commit   | `String` | Commit hash                                       |
 | name     | `String` | Name of the contributor                           |
 | username | `String` | Username of the contributor                       |
 | email    | `String` | Email of the contributor                          |
@@ -138,7 +138,7 @@ Identifies the person who applied or committed the patch to the repository.
 
 ##### Acked-by
 
-Identifies the person who is more familiar with the area the patch 
+Identifies the person who is more familiar with the area the patch
 attempts to modify and has approved the patch.
 
 - Event type: `org.grimoirelab.events.git.commit.acked_by`
@@ -151,14 +151,14 @@ Identifies people who exchanged drafts of a patch before submitting it.
 
 ##### Helped-by
 
-Identifies someone who suggested ideas for changes without providing the precise 
+Identifies someone who suggested ideas for changes without providing the precise
 changes in patch form.
 
 - Event type: `org.grimoirelab.events.git.commit.helped_by`
 
 ##### Mentored-by
 
-Identifies someone who helped develop a patch as part of a mentorship program 
+Identifies someone who helped develop a patch as part of a mentorship program
 (e.g., GSoC or Outreachy).
 
 - Event type: `org.grimoirelab.events.git.commit.mentored_by`
@@ -170,14 +170,14 @@ Identifies the person who found the bug that the patch attempts to fix.
 - Event type: `org.grimoirelab.events.git.commit.reported_by`
 
 ##### Reviewed-by
-Identifies the reviewer who, after a detailed analysis, is completely satisfied 
+Identifies the reviewer who, after a detailed analysis, is completely satisfied
 with the patch.
 
 - Event type: `org.grimoirelab.events.git.commit.reviewed_by`
 
 ##### Signed-off-by
 
-Indicates that the committer certifies they have the rights to submit the work, 
+Indicates that the committer certifies they have the rights to submit the work,
 typically by adding a sign-off line in the commit message.
 
 - Event type: `org.grimoirelab.events.git.commit.signed_off_by`

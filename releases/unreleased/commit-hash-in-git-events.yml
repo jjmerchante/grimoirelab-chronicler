@@ -1,0 +1,9 @@
+---
+title: Commit hash in Git events
+category: added
+author: Santiago Dueñas <sduenas@bitergia.com>
+issue: 12
+notes: >
+  Git events - including actions and identities events -
+  will include the commit hash for traceability purposes.
+
