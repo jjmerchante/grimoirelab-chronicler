@@ -26,6 +26,7 @@ from grimoirelab_toolkit.identities import generate_uuid
 
 from ...eventizer import Eventizer, uuid, Identity
 
+
 GIT_EVENT_COMMIT = "org.grimoirelab.events.git.commit"
 GIT_EVENT_MERGE_COMMIT = "org.grimoirelab.events.git.merge"
 GIT_EVENT_ACTION_ADDED = "org.grimoirelab.events.git.file.added"
@@ -101,6 +102,7 @@ class GitEventizer(Eventizer):
         events.append(event)
 
         action_events = self._eventize_commit_actions(event,
+                                                      raw_item['data']['commit'],
                                                       raw_item['data']['files'])
 
         events.extend(action_events)
@@ -112,7 +114,7 @@ class GitEventizer(Eventizer):
 
         return events
 
-    def _eventize_commit_actions(self, parent_event: CloudEvent, raw_files_data):
+    def _eventize_commit_actions(self, parent_event: CloudEvent, commit_hash, raw_files_data):
 
         events = []
 
@@ -127,7 +129,10 @@ class GitEventizer(Eventizer):
             if parent_event['type'] == GIT_EVENT_COMMIT:
                 action_event = self._process_action(parent_event['source'],
                                                     parent_event['time'],
-                                                    parent_event['id'], actions, file_data)
+                                                    parent_event['id'],
+                                                    commit_hash,
+                                                    actions,
+                                                    file_data)
                 events.append(action_event)
             else:
                 prev_merge_action = None
@@ -137,12 +142,15 @@ class GitEventizer(Eventizer):
 
                     action_event = self._process_action(parent_event['source'],
                                                         parent_event['time'],
-                                                        parent_event['id'], action, file_data)
+                                                        parent_event['id'],
+                                                        commit_hash,
+                                                        action,
+                                                        file_data)
                     events.append(action_event)
                     prev_merge_action = action
         return events
 
-    def _process_action(self, source, time, event_uuid, action, file_data):
+    def _process_action(self, source, time, event_uuid, commit_hash, action, file_data):
         if action == 'A':
             event_type = GIT_EVENT_ACTION_ADDED
         elif action == 'M':
@@ -165,6 +173,7 @@ class GitEventizer(Eventizer):
         event_id = uuid(*id_args)
 
         data = {
+            "commit": commit_hash,
             "filename": file_data['file'],
             "modes": file_data['modes'],
             "indexes": file_data['indexes'],
@@ -191,11 +200,14 @@ class GitEventizer(Eventizer):
 
         events = []
 
+        commit_hash = raw_item["data"]["commit"]
+
         authors = self._parse_authors(raw_item["data"]["Author"])
         identity_events = self._process_identities(parent_event['source'],
                                                    parent_event['time'],
                                                    parent_event['id'],
                                                    GIT_EVENT_COMMIT_AUTHORED_BY,
+                                                   commit_hash,
                                                    authors)
         events.extend(identity_events)
 
@@ -204,6 +216,7 @@ class GitEventizer(Eventizer):
                                                    parent_event['time'],
                                                    parent_event['id'],
                                                    GIT_EVENT_COMMIT_COMMITTED_BY,
+                                                   commit_hash,
                                                    committers)
         events.extend(identity_events)
 
@@ -213,6 +226,7 @@ class GitEventizer(Eventizer):
                                                        parent_event['time'],
                                                        parent_event['id'],
                                                        event_type,
+                                                       commit_hash,
                                                        signers)
             events.extend(identity_events)
 
@@ -224,6 +238,7 @@ class GitEventizer(Eventizer):
         time: str,
         event_uuid: str,
         event_type: str,
+        commit_hash: str,
         raw_identities: list[str]
     ) -> Generator[CloudEvent, None, None]:
         """Obtain identity events from a list of identities.
@@ -232,6 +247,7 @@ class GitEventizer(Eventizer):
         :param time: time of the event
         :param event_uuid: UUID of the parent event
         :param event_type: type of the identity event
+        :param commit_hash: hash of the commit where identities contributed
         :param raw_identities: list of strings with the identities information
 
         :returns: generator of CloudEvent with the identity information
@@ -252,6 +268,7 @@ class GitEventizer(Eventizer):
             event_id = uuid(event_uuid, role, identity_id)
 
             data = {
+                "commit": commit_hash,
                 "source": "git",
                 "name": identity.name,
                 "username": identity.username,
